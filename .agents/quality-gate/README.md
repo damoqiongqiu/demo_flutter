@@ -1,16 +1,27 @@
-# 测试场景分层
+# 框架自身测试（吃狗粮）
 
-| 层级 | 名称 | 范围 | 目标 |
-|:---:|------|------|------|
-| L1 | 冒烟测试 | 基础设施健康检查 | 确认所有服务可启动 |
-| L2 | 单元测试 | 单模块隔离 | 确认函数/API 正确性 |
-| L3 | E2E 测试 | 全业务流程 | 确认用户场景完整 |
-| L4 | 安全测试 | 权限/注入/越权 | 确认安全防线有效 |
-| L5 | 回归测试 | 发布前全量验证 | 确认无回归、0 失败 |
+my-harness-flow 用自己定义的 L1-L5 分层来验证自身。
 
-`quality-gate` 技能按 `start-task` 定档结果分层执行：
-Light → L1；Standard → L1-L3；Full → L1-L3 + L5。
+## 运行
 
-各层脚本为占位骨架，接入项目后按实际技术栈填充实现，**保持脚本名与退出码约定不变**（0 = PASS，非 0 = FAIL）。
+```bash
+# 全量回归
+bash .agents/quality-gate/l5-regression/run-l5-regression.sh
 
-各层可按需扩展子目录（如 `l4-e2e-scenarios/`、`l5-load/` 负载测试），命名保持 `l<N>-<用途>` 约定。
+# 单层
+bash .agents/quality-gate/l1-smoke/health-check.sh
+bash .agents/quality-gate/l2-integration/run-l2-integration.sh
+```
+
+## 分层
+
+| 层 | 检查内容 | 通过标准 |
+|----|---------|---------|
+| L1 | bash -n + CLI 帮助 + py_compile + 品牌中性 + 文件完整性 | 0 Fail |
+| L2 | 安装/幂等/dry-run/status/upgrade/模板差异/profile/uninstall | 通过率 ≥ 90% |
+| L3 | 全生命周期（安装 + web profile → 自检 → 卸载 → 清理） | 0 Fail |
+| L4 | 硬编码密码 + API key + 品牌中性扫描 | 0 Fail |
+| L5 | 串联 L1-L4 | 0 Fail |
+
+> 本目录是框架自身的测试，不会分发给目标项目。
+> 目标是 `templates/.agents/quality-gate/`，安装时复制到用户仓库。
